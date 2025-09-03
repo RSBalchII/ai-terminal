@@ -3,7 +3,9 @@ use futures_util::StreamExt;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, error, info, warn};
+use std::time::Duration;
+use tokio::time::timeout;
+use tracing::{debug, info, warn};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OllamaModel {
@@ -103,7 +105,14 @@ impl OllamaClient {
     pub async fn set_model(&mut self, model_name: String) -> Result<()> {
         debug!("Setting model to: {}", model_name);
         
-        let models = self.get_models().await?;
+        // Add timeout to prevent freezing on model validation
+        let models = timeout(
+            Duration::from_secs(10), // 10 second timeout for model list
+            self.get_models()
+        )
+        .await
+        .map_err(|_| anyhow!("Model validation timed out after 10 seconds"))??;
+        
         if models.iter().any(|m| m.name == model_name) {
             self.current_model = Some(model_name.clone());
             info!("Model set to: {}", model_name);
@@ -118,12 +127,13 @@ impl OllamaClient {
     }
     
     pub async fn generate(&self, prompt: String) -> Result<String> {
+        debug!("=== ENTERING generate() method ===");
         let model = self
             .current_model
             .as_ref()
             .ok_or_else(|| anyhow!("No model selected"))?;
             
-        debug!("Generating response with model: {}", model);
+        debug!("Generating response with model: {}, prompt length: {}", model, prompt.len());
         
         let request = GenerateRequest {
             model: model.clone(),
@@ -132,18 +142,25 @@ impl OllamaClient {
             options: None,
         };
         
-        let response = self
-            .client
-            .post(&format!("{}/api/generate", self.base_url))
-            .json(&request)
-            .send()
-            .await?;
+        debug!("About to send POST request to {}/api/generate", self.base_url);
+        let response = timeout(
+            Duration::from_secs(30), // 30 second timeout
+            self.client
+                .post(&format!("{}/api/generate", self.base_url))
+                .json(&request)
+                .send()
+        )
+        .await
+        .map_err(|_| anyhow!("Request timed out after 30 seconds"))??;
+        debug!("Received HTTP response with status: {}", response.status());
             
         if !response.status().is_success() {
             return Err(anyhow!("Generation failed: {}", response.status()));
         }
         
+        debug!("About to parse JSON response");
         let generate_response: GenerateResponse = response.json().await?;
+        debug!("=== EXITING generate() method with response length: {} ===", generate_response.response.len());
         Ok(generate_response.response)
     }
     

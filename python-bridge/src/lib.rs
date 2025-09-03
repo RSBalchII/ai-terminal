@@ -2,6 +2,7 @@ use anyhow::{anyhow, Result};
 use pyo3::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::sync::Arc;
 use tracing::{debug, info};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -17,10 +18,27 @@ pub struct ToolCall {
     pub parameters: HashMap<String, serde_json::Value>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemToolRequest {
+    pub tool_type: String,
+    pub tool_name: String,
+    pub args: serde_json::Value,
+    pub security_level: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct SystemToolResponse {
+    pub success: bool,
+    pub output: String,
+    pub error: Option<String>,
+    pub execution_time_ms: u64,
+}
+
 #[derive(Clone)]
 pub struct PythonBridge {
     agent_pipeline: Vec<AgentConfig>,
     python_path: String,
+    system_tools_executor: Option<Arc<tokio::sync::mpsc::UnboundedSender<(SystemToolRequest, tokio::sync::oneshot::Sender<SystemToolResponse>)>>>,
 }
 
 impl PythonBridge {
@@ -29,22 +47,30 @@ impl PythonBridge {
         pyo3::prepare_freethreaded_python();
         
         Python::with_gil(|py| {
-            let python_path = std::env::current_dir()?
+            let python_path = match std::env::current_dir()?
                 .join("../cli-terminal-ai")
-                .canonicalize()?
-                .to_string_lossy()
-                .to_string();
+                .canonicalize() {
+                    Ok(path) => path.to_string_lossy().to_string(),
+                    Err(e) => {
+                        info!("Python project path not found: {}, continuing without Python integration", e);
+                        // Use current directory as fallback
+                        std::env::current_dir()?.to_string_lossy().to_string()
+                    }
+                };
                 
             info!("Initializing Python bridge with path: {}", python_path);
             
-            // Add the Python project path to sys.path
-            let sys = py.import_bound("sys")?;
-            let path = sys.getattr("path")?;
-            path.call_method1("append", (&python_path,))?;
+            // Try to add the Python project path to sys.path
+            if let Ok(sys) = py.import_bound("sys") {
+                if let Ok(path) = sys.getattr("path") {
+                    let _ = path.call_method1("append", (&python_path,));
+                }
+            }
             
             Ok(Self {
                 agent_pipeline: Vec::new(),
                 python_path,
+                system_tools_executor: None,
             })
         })
     }
@@ -83,9 +109,11 @@ impl PythonBridge {
         &self.agent_pipeline
     }
     
-    pub fn recognize_tool_intent(&self, _prompt: &str) -> Result<Option<ToolCall>> {
+    pub fn recognize_tool_intent(&self, prompt: &str) -> Result<Option<ToolCall>> {
+        debug!("Python bridge: recognize_tool_intent called with: {}", prompt);
         // For now, return None to avoid complex type conversions
         // This will be implemented properly once we have the full integration working
+        debug!("Python bridge: returning None for tool intent");
         Ok(None)
     }
     
@@ -119,6 +147,130 @@ impl PythonBridge {
     pub fn is_python_available(&self) -> bool {
         Python::with_gil(|py| {
             py.import_bound("llm_cli.main").is_ok()
+        })
+    }
+    
+    /// Set the system tools executor channel
+    pub fn set_system_tools_executor(
+        &mut self, 
+        executor: Arc<tokio::sync::mpsc::UnboundedSender<(SystemToolRequest, tokio::sync::oneshot::Sender<SystemToolResponse>)>>
+    ) {
+        self.system_tools_executor = Some(executor);
+    }
+    
+    /// Execute a system tool via the executor channel
+    pub async fn execute_system_tool(&self, request: SystemToolRequest) -> Result<SystemToolResponse> {
+        let executor = self.system_tools_executor.as_ref()
+            .ok_or_else(|| anyhow!("System tools executor not initialized"))?;
+            
+        let (response_tx, response_rx) = tokio::sync::oneshot::channel();
+        
+        executor.send((request, response_tx))
+            .map_err(|e| anyhow!("Failed to send tool request: {}", e))?;
+            
+        response_rx.await
+            .map_err(|e| anyhow!("Failed to receive tool response: {}", e))
+    }
+    
+    /// Parse user input to detect system tool requests
+    pub fn parse_system_tool_request(&self, input: &str) -> Option<SystemToolRequest> {
+        // Simple pattern matching for tool requests
+        // In a real implementation, this would be more sophisticated
+        
+        let input = input.trim();
+        
+        // Check for filesystem commands (exact matches only)
+        if input.starts_with("ls ") && input.len() > 3 {
+            let path = input.split_whitespace().nth(1).unwrap_or(".").to_string();
+            return Some(SystemToolRequest {
+                tool_type: "filesystem".to_string(),
+                tool_name: "list_directory".to_string(),
+                args: serde_json::json!({"path": path}),
+                security_level: Some("medium".to_string()),
+            });
+        }
+        
+        if input.starts_with("cat ") && input.len() > 4 {
+            let path = input.split_whitespace().nth(1).unwrap_or("").to_string();
+            if !path.is_empty() && !path.contains(" ") {
+                return Some(SystemToolRequest {
+                    tool_type: "filesystem".to_string(),
+                    tool_name: "read_file".to_string(),
+                    args: serde_json::json!({"path": path}),
+                    security_level: Some("medium".to_string()),
+                });
+            }
+        }
+        
+        if input.starts_with("find ") || input.starts_with("search ") {
+            let parts: Vec<&str> = input.split_whitespace().collect();
+            if parts.len() >= 3 {
+                let path = parts[1].to_string();
+                let pattern = parts[2].to_string();
+                return Some(SystemToolRequest {
+                    tool_type: "filesystem".to_string(),
+                    tool_name: "find_files".to_string(),
+                    args: serde_json::json!({"path": path, "pattern": pattern}),
+                    security_level: Some("medium".to_string()),
+                });
+            }
+        }
+        
+        // Check for network commands
+        if input.starts_with("ping ") {
+            let host = input.split_whitespace().nth(1).unwrap_or("").to_string();
+            if !host.is_empty() {
+                return Some(SystemToolRequest {
+                    tool_type: "network".to_string(),
+                    tool_name: "ping".to_string(),
+                    args: serde_json::json!({"host": host, "count": 4}),
+                    security_level: Some("medium".to_string()),
+                });
+            }
+        }
+        
+        // Check for process commands
+        if input == "ps" || input == "processes" {
+            return Some(SystemToolRequest {
+                tool_type: "process".to_string(),
+                tool_name: "list_processes".to_string(),
+                args: serde_json::json!({}),
+                security_level: Some("low".to_string()),
+            });
+        }
+        
+        None
+    }
+    
+    /// Get available system tools for the AI assistant
+    pub fn get_system_tools_info(&self) -> serde_json::Value {
+        serde_json::json!({
+            "description": "System tools available for execution",
+            "tools": {
+                "filesystem": {
+                    "list_directory": "List contents of a directory",
+                    "read_file": "Read contents of a file",
+                    "search_content": "Search for patterns in files",
+                    "find_files": "Find files matching pattern",
+                    "file_info": "Get file information"
+                },
+                "network": {
+                    "ping": "Ping a host",
+                    "resolve_dns": "Resolve DNS hostname",
+                    "http_request": "Make HTTP request",
+                    "port_scan": "Scan ports on a host",
+                    "netcat": "Test network connectivity"
+                },
+                "process": {
+                    "list_processes": "List running processes",
+                    "process_info": "Get process information"
+                }
+            },
+            "usage": {
+                "filesystem": "Use commands like 'ls /path', 'cat file.txt', 'find /path pattern'",
+                "network": "Use commands like 'ping hostname'",
+                "process": "Use commands like 'ps' to list processes"
+            }
         })
     }
 }

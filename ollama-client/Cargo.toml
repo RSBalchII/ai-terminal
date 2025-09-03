@@ -5,10 +5,10 @@ edition = "2024"
 
 [dependencies]
 reqwest = { workspace = true }
-tokio = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
-futures-util = { workspace = true }
 anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
+futures-util = { workspace = true }
+tokio = { workspace = true }
