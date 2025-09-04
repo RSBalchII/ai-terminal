@@ -14,3 +14,10 @@ thiserror = { workspace = true }
 tracing = { workspace = true }
 ollama-client = { path = "../ollama-client" }
 python-bridge = { path = "../python-bridge" }
+terminal-emulator = { path = "../terminal-emulator" }
+chrono = { workspace = true }
+
+[dev-dependencies]
+tokio-test = "0.4"
+reqwest = { workspace = true }
+futures-util = { workspace = true }
