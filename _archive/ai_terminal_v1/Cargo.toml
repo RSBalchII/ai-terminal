@@ -5,7 +5,8 @@ members = [
     "terminal-emulator",
     "ollama-client", 
     "python-bridge",
-    "system-tools"
+    "system-tools",
+    "ai-terminal"
 ]
 resolver = "2"
 
@@ -43,35 +44,3 @@ chrono = { version = "0.4", features = ["serde"] }
 egui = "0.28"
 eframe = { version = "0.28", default-features = false, features = ["default_fonts", "glow", "persistence", "x11"] }
 egui_extras = { version = "0.28", features = ["default", "image"] }
-
-
-[package]
-name = "ai-terminal"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-terminal-ui = { path = "terminal-ui" }
-egui-ui = { path = "egui-ui" }
-ollama-client = { path = "ollama-client" }
-python-bridge = { path = "python-bridge" }
-system-tools = { path = "system-tools" }
-tokio = { workspace = true }
-anyhow = { workspace = true }
-tracing = { workspace = true }
-tracing-subscriber = { workspace = true }
-clap = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
-reqwest = { workspace = true }
-egui = { workspace = true }
-eframe = { workspace = true }
-egui_extras = { workspace = true }
-
-[[bin]]
-name = "ai-terminal-gui"
-path = "src/gui_main.rs"
-
-[[bin]]
-name = "debug-ollama"
-path = "debug_ollama.rs"
