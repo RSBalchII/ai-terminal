@@ -1,0 +1,39 @@
+[workspace]
+members = [
+    "terminal-ui",
+    "terminal-emulator",
+]
+resolver = "2"
+
+[workspace.dependencies]
+# Async runtime
+tokio = { version = "1.0", features = ["full"] }
+
+# Terminal UI
+ratatui = "0.28"
+crossterm = "0.28"
+
+# HTTP client for Ollama
+reqwest = { version = "0.12", features = ["json", "stream"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Utilities
+anyhow = "1.0"
+thiserror = "1.0"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+futures-util = "0.3"
+clap = { version = "4.0", features = ["derive"] }
+
+# Time handling
+chrono = { version = "0.4", features = ["serde"] }
+
+# UUID for unique identifiers
+uuid = { version = "1.0", features = ["v4", "serde"] }
+
+# PTY for terminal emulation
+portable-pty = "0.8"
+strip-ansi-escapes = "0.2"
