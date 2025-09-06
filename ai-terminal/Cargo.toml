@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-terminal-ui = { path = "./terminal-ui" }
-terminal-emulator = { path = "./terminal-emulator" }
+terminal-ui = { path = "../terminal-ui" }
+terminal-emulator = { path = "../terminal-emulator" }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }

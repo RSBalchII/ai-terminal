@@ -1,0 +1,27 @@
+[package]
+name = "ollama-client"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+# Async runtime
+tokio = { workspace = true }
+
+# HTTP client for Ollama
+reqwest = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Utilities
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+futures-util = { workspace = true }
+
+# Tracing
+tracing = { workspace = true }
+
+# For tests
+wiremock = "0.5"
+async-stream = "0.3"

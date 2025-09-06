@@ -10,6 +10,9 @@ A terminal-based frontend for AI interactions, built with Rust using ratatui and
 - Real-time output streaming
 - Visual status indicators for command execution
 - Keyboard navigation and controls
+- **Persistent command history with file I/O**
+- **History navigation with arrow keys**
+- **Tab completion for file paths**
 
 ## Prerequisites
 
@@ -31,6 +34,8 @@ cargo run
 ## Controls
 
 - Type commands and press Enter to execute
+- **Up/Down Arrow Keys: Navigate command history**
+- **Tab: Complete file paths**
 - F1: Show help
 - F10: Exit application
 - Page Up/Down: Scroll through command history

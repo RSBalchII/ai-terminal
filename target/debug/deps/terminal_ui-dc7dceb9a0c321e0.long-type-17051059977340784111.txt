@@ -1,0 +1,2 @@
+async_stream::async_stream::_::__Origin<'_, Result<OllamaResponse, OllamaError>, {async block@OllamaClient::stream_response::{closure#0}}>
+async_stream::async_stream::AsyncStream<Result<OllamaResponse, OllamaError>, {async block@OllamaClient::stream_response::{closure#0}}>

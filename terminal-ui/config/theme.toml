@@ -1,0 +1,13 @@
+# AI Terminal Theme Configuration
+
+name = "custom"
+primary = "blue"
+secondary = "gray"
+background = "black"
+text = "white"
+accent = "cyan"
+error = "red"
+success = "green"
+warning = "yellow"
+command = "cyan"
+ai_response = "green"

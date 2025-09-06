@@ -2,6 +2,8 @@
 members = [
     "terminal-ui",
     "terminal-emulator",
+    "ollama-client",
+    "ai-terminal",
 ]
 resolver = "2"
 
@@ -37,3 +39,7 @@ uuid = { version = "1.0", features = ["v4", "serde"] }
 # PTY for terminal emulation
 portable-pty = "0.8"
 strip-ansi-escapes = "0.2"
+
+# For tests
+wiremock = "0.5"
+async-stream = "0.3"
