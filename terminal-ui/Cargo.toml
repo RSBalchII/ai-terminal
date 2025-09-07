@@ -1,0 +1,22 @@
+[package]
+name = "terminal-ui"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+terminal-emulator = { path = "../terminal-emulator" }
+ollama-client = { path = "../ollama-client" }
+anyhow = { workspace = true }
+chrono = { workspace = true }
+crossterm = { workspace = true }
+fuzzy-matcher = "0.3"
+ratatui = { workspace = true }
+serde = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+toml = "0.8"
+futures-util = { workspace = true }
+dirs = "5.0"
+pulldown-cmark = "0.9"
+syntect = "5.0"
+uuid = { version = "1.0", features = ["v4"] }

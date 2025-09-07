@@ -1,141 +1,112 @@
-use std::env;
+//! # Ollama API Client
+//!
+//! This module provides the main client for interacting with the Ollama API.
+//! It handles sending requests, managing streaming responses, and maintaining
+//! conversation history.
 
-use futures_util::StreamExt;
+use crate::{error::OllamaError, models::{OllamaRequest, OllamaResponse}, history::ConversationHistory};
 use reqwest::{Client, Response};
-use tracing::{debug, error, info};
+use serde_json::Value;
+use std::env;
+use tracing::{info, error};
+use futures_util::StreamExt;
 
-use crate::error::OllamaError;
-use crate::models::{OllamaRequest, OllamaResponse};
+/// The default base URL for the Ollama API
+const DEFAULT_BASE_URL: &str = "http://localhost:11434/api";
 
-/// The base URL for the Ollama API
-const OLLAMA_API_BASE: &str = "http://localhost:11434/api";
-
-/// A client for interacting with the Ollama API
+/// The main client for interacting with the Ollama API
+#[derive(Debug, Clone)]
 pub struct OllamaClient {
-    /// The HTTP client
-    client: Client,
+    /// The HTTP client used for requests
+    http_client: Client,
     
     /// The base URL for the Ollama API
-    base_url: String,
+    pub base_url: String,
+    
+    /// The model to use for requests
+    pub model: String,
+    
+    /// The conversation history
+    pub history: ConversationHistory,
 }
 
 impl OllamaClient {
-    /// Create a new OllamaClient
+    /// Create a new OllamaClient with default settings
     pub fn new() -> Result<Self, OllamaError> {
-        // Check if OLLAMA_HOST is set in environment variables
         let base_url = env::var("OLLAMA_HOST")
-            .unwrap_or_else(|_| OLLAMA_API_BASE.to_string());
+            .unwrap_or_else(|_| DEFAULT_BASE_URL.to_string());
         
-        info!("Initializing Ollama client with base URL: {}", base_url);
+        let client = Client::new();
+        let history = ConversationHistory::new(10); // Default to 10 messages of history
         
         Ok(Self {
-            client: Client::new(),
+            http_client: client,
             base_url,
+            model: "llama3".to_string(), // Default model
+            history,
         })
     }
     
-    /// Send a request to the Ollama API and return a stream of responses
-    pub async fn chat(
-        &self,
-        request: OllamaRequest,
-    ) -> Result<impl futures_util::Stream<Item = Result<OllamaResponse, OllamaError>> + Unpin, OllamaError> {
+    /// Create a new OllamaClient with a specific model
+    pub fn with_model(model: String) -> Result<Self, OllamaError> {
+        let mut client = Self::new()?;
+        client.model = model;
+        Ok(client)
+    }
+    
+    /// Send a request to the Ollama API
+    pub async fn send_request(&self, request: OllamaRequest) -> Result<Response, OllamaError> {
         let url = format!("{}/generate", self.base_url);
-        debug!("Sending request to: {}", url);
+        info!("Sending request to: {}", url);
         
-        let response = self.client
+        let response = self.http_client
             .post(&url)
             .json(&request)
             .send()
-            .await
-            .map_err(OllamaError::RequestFailed)?;
-        
-        // Check if the response status is successful
-        if !response.status().is_success() {
-            error!("Request failed with status: {}", response.status());
-            return Err(OllamaError::InvalidResponse(format!(
-                "Request failed with status: {}",
-                response.status()
-            )));
-        }
-        
-        // Create a stream from the response
-        Ok(Box::pin(self.stream_response(response)))
+            .await?;
+            
+        Ok(response)
     }
     
-    /// Stream the response from the Ollama API
-    fn stream_response(
-        &self,
-        response: Response,
-    ) -> impl futures_util::Stream<Item = Result<OllamaResponse, OllamaError>> {
-        async_stream::stream! {
-            let mut stream = response.bytes_stream();
-            
-            // Buffer for incomplete JSON lines
-            let mut buffer = String::new();
-            
-            while let Some(chunk) = stream.next().await {
-                match chunk {
-                    Ok(bytes) => {
-                        // Convert bytes to string and append to buffer
-                        let chunk_str = match std::str::from_utf8(&bytes) {
-                            Ok(s) => s,
-                            Err(e) => {
-                                error!("Failed to convert bytes to string: {}", e);
-                                yield Err(OllamaError::IoError(std::io::Error::new(
-                                    std::io::ErrorKind::InvalidData,
-                                    "Invalid UTF-8 sequence"
-                                )));
-                                continue;
-                            }
-                        };
-                        
-                        buffer.push_str(chunk_str);
-                        
-                        // Process complete lines
-                        while let Some(newline_pos) = buffer.find('\n') {
-                            // Extract the line (including the newline)
-                            let line = buffer[..=newline_pos].to_string();
-                            // Remove the processed line from the buffer
-                            buffer = buffer[newline_pos + 1..].to_string();
-                            
-                            // Skip empty lines
-                            if line.trim().is_empty() {
-                                continue;
-                            }
-                            
-                            // Try to deserialize the line
-                            match serde_json::from_str::<OllamaResponse>(&line) {
-                                Ok(response) => {
-                                    yield Ok(response);
-                                }
-                                Err(e) => {
-                                    error!("Failed to deserialize response line: {}", e);
-                                    error!("Problematic line: {:?}", line);
-                                    yield Err(OllamaError::JsonError(e));
-                                }
-                            }
-                        }
-                    }
-                    Err(e) => {
-                        error!("Failed to read response chunk: {}", e);
-                        yield Err(OllamaError::RequestFailed(e));
-                    }
-                }
-            }
-            
-            // Process any remaining data in the buffer
-            if !buffer.is_empty() {
-                match serde_json::from_str::<OllamaResponse>(&buffer) {
-                    Ok(response) => {
-                        yield Ok(response);
-                    }
-                    Err(e) => {
-                        error!("Failed to deserialize remaining buffer: {}", e);
-                        error!("Remaining buffer: {:?}", buffer);
-                        yield Err(OllamaError::JsonError(e));
-                    }
-                }
-            }
+    /// Send a request to the Ollama API and stream the response
+    pub async fn stream_request(&self, request: OllamaRequest) -> Result<impl StreamExt<Item = Result<OllamaResponse, OllamaError>>, OllamaError> {
+        let response = self.send_request(request).await?;
+        
+        // Check if the response is successful
+        if !response.status().is_success() {
+            return Err(OllamaError::RequestFailed(
+                reqwest::Error::from(response.error_for_status().unwrap_err())
+            ));
         }
+        
+        // Create a stream from the response bytes
+        let stream = response.bytes_stream()
+            .map(|result| {
+                match result {
+                    Ok(bytes) => {
+                        // Try to parse the bytes as a JSON object
+                        match serde_json::from_slice::<OllamaResponse>(&bytes) {
+                            Ok(response) => Ok(response),
+                            Err(e) => Err(OllamaError::JsonError(e)),
+                        }
+                    },
+                    Err(e) => Err(OllamaError::RequestFailed(e)),
+                }
+            });
+            
+        Ok(stream)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[tokio::test]
+    async fn test_ollama_client_with_config() {
+        // This test would require a running Ollama instance to work properly
+        // For now, we'll just test that we can create a client with a specific model
+        let client = OllamaClient::with_model("llama3".to_string());
+        assert!(client.is_ok());
     }
 }

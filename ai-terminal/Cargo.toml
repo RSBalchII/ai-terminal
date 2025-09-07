@@ -6,8 +6,20 @@ edition = "2024"
 [dependencies]
 terminal-ui = { path = "../terminal-ui" }
 terminal-emulator = { path = "../terminal-emulator" }
+ollama-client = { path = "../ollama-client" }
 tokio = { workspace = true }
 anyhow = { workspace = true }
 clap = { workspace = true }
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+
+# Configuration
+toml = "0.8"
+serde = { workspace = true, features = ["derive"] }
+
+# JSON-RPC for MCP
+jsonrpc-core = "18.0"
+serde_json = { workspace = true }
+
+# For streaming responses
+futures-util = { workspace = true }

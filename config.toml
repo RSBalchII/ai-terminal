@@ -1,0 +1,28 @@
+# AI-Terminal Configuration File
+# This file controls the behavior of the AI features in the terminal
+
+[ollama]
+# The default model to use for Ollama requests
+model = "llama3"
+
+# Optional system prompt to guide the model's behavior
+# If not specified, the model's default system prompt will be used
+system_prompt = """
+You are an expert terminal assistant. You help users with terminal commands, 
+shell scripting, and system administration tasks. Provide concise, accurate 
+responses and always consider the context of the user's operating system.
+"""
+
+# Custom prompts that can be referenced by name in the application
+[custom_prompts]
+terminal_expert = """
+You are an expert terminal assistant. You help users with terminal commands, 
+shell scripting, and system administration tasks. Provide concise, accurate 
+responses and always consider the context of the user's operating system.
+"""
+
+shell_scripting = """
+You are a shell scripting expert. Help users write, debug, and optimize 
+shell scripts for various tasks. Explain your solutions clearly and 
+provide examples when helpful.
+"""

@@ -1,13 +1,13 @@
 #[cfg(test)]
 mod tests {
-    use terminal_ui::layout::{LayoutManager};
-    use ratatui::layout::Rect;
-
+    use ratatui::prelude::Rect;
+    use terminal_ui::layout::LayoutManager;
+    
     #[test]
     fn test_layout_manager_creation() {
         let rect = Rect::new(0, 0, 80, 24);
         let layout_manager = LayoutManager::new(rect);
-        assert_eq!(layout_manager.terminal_size, rect);
+        assert_eq!(layout_manager.terminal_size(), rect);
     }
     
     #[test]
@@ -16,10 +16,10 @@ mod tests {
         let rect2 = Rect::new(0, 0, 120, 40);
         
         let mut layout_manager = LayoutManager::new(rect1);
-        assert_eq!(layout_manager.terminal_size, rect1);
+        assert_eq!(layout_manager.terminal_size(), rect1);
         
         layout_manager.update_size(rect2);
-        assert_eq!(layout_manager.terminal_size, rect2);
+        assert_eq!(layout_manager.terminal_size(), rect2);
     }
     
     #[test]
@@ -34,20 +34,10 @@ mod tests {
         // Header should be 1 line tall
         assert_eq!(layout[0].height, 1);
         
+        // Input should be 3 lines tall
+        assert_eq!(layout[2].height, 3);
+        
         // Status should be 1 line tall
         assert_eq!(layout[3].height, 1);
-    }
-    
-    #[test]
-    fn test_calculate_centered_rect() {
-        let rect = Rect::new(0, 0, 100, 50);
-        let layout_manager = LayoutManager::new(rect);
-        let centered = layout_manager.calculate_centered_rect(50, 50, rect);
-        
-        // Should be centered
-        assert!(centered.x > 0);
-        assert!(centered.y > 0);
-        assert!(centered.width < rect.width);
-        assert!(centered.height < rect.height);
     }
 }

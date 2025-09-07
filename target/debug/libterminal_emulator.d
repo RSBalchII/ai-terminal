@@ -1,1 +1,0 @@
-/home/rsbiiw/projects/ai-terminal/target/debug/libterminal_emulator.rlib: /home/rsbiiw/projects/ai-terminal/terminal-emulator/src/command_block.rs /home/rsbiiw/projects/ai-terminal/terminal-emulator/src/command_history.rs /home/rsbiiw/projects/ai-terminal/terminal-emulator/src/lib.rs /home/rsbiiw/projects/ai-terminal/terminal-emulator/src/pty_executor.rs

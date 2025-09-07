@@ -13,6 +13,7 @@ A terminal-based frontend for AI interactions, built with Rust using ratatui and
 - **Persistent command history with file I/O**
 - **History navigation with arrow keys**
 - **Tab completion for file paths**
+- **Configurable AI model and system prompts**
 
 ## Prerequisites
 
@@ -30,6 +31,45 @@ cargo build
 ```bash
 cargo run
 ```
+
+## Configuration
+
+The AI-Terminal can be configured using a `config.toml` file in the root directory. The configuration file has the following structure:
+
+```toml
+[ollama]
+# The default model to use for Ollama requests
+model = "llama3"
+
+# Optional system prompt to guide the model's behavior
+system_prompt = """
+You are an expert terminal assistant. You help users with terminal commands, 
+shell scripting, and system administration tasks. Provide concise, accurate 
+responses and always consider the context of the user's operating system.
+"""
+
+# Custom prompts that can be referenced by name in the application
+[custom_prompts]
+terminal_expert = """
+You are an expert terminal assistant. You help users with terminal commands, 
+shell scripting, and system administration tasks. Provide concise, accurate 
+responses and always consider the context of the user's operating system.
+"""
+
+shell_scripting = """
+You are a shell scripting expert. Help users write, debug, and optimize 
+shell scripts for various tasks. Explain your solutions clearly and 
+provide examples when helpful.
+"""
+```
+
+### Configuration Options
+
+- `ollama.model`: The default model to use for Ollama requests. This can be any model that is available in your Ollama installation.
+
+- `ollama.system_prompt`: An optional system prompt that will be sent to the model to guide its behavior. If not specified, the model's default system prompt will be used.
+
+- `custom_prompts`: A section for defining custom prompts that can be referenced by name in the application. These prompts can be used to provide specific guidance to the AI for different types of tasks.
 
 ## Controls
 

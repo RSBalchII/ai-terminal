@@ -1,9 +1,14 @@
+//! # Ollama Data Models
+//!
+//! This module defines the data models used for requests and responses
+//! when interacting with the Ollama API.
+
 use serde::{Deserialize, Serialize};
 
-/// Request structure for the Ollama API
+/// A request to the Ollama API
 #[derive(Debug, Serialize, Clone)]
 pub struct OllamaRequest {
-    /// The model name to use for generation
+    /// The model to use for generation
     pub model: String,
     
     /// The prompt to send to the model
@@ -13,54 +18,54 @@ pub struct OllamaRequest {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub system: Option<String>,
     
-    /// Optional template to use for the prompt
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub template: Option<String>,
-    
-    /// Optional context to continue a conversation
+    /// Optional context from previous interactions
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context: Option<Vec<i32>>,
     
-    /// Optional stream flag (default: true)
+    /// Whether to stream the response
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>,
-    
-    /// Optional raw mode flag
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub raw: Option<bool>,
 }
 
 impl OllamaRequest {
-    /// Create a new OllamaRequest
+    /// Create a new OllamaRequest with default settings
     pub fn new(model: String, prompt: String) -> Self {
         Self {
             model,
             prompt,
             system: None,
-            template: None,
             context: None,
             stream: Some(true), // Default to streaming
-            raw: None,
         }
     }
     
-    /// Set the system message
-    pub fn with_system(mut self, system: String) -> Self {
-        self.system = Some(system);
-        self
+    /// Create a new OllamaRequest with a system message
+    pub fn with_system(model: String, prompt: String, system: String) -> Self {
+        Self {
+            model,
+            prompt,
+            system: Some(system),
+            context: None,
+            stream: Some(true), // Default to streaming
+        }
     }
     
-    /// Set the context
-    pub fn with_context(mut self, context: Vec<i32>) -> Self {
-        self.context = Some(context);
-        self
+    /// Create a new OllamaRequest with context
+    pub fn with_context(model: String, prompt: String, context: Vec<i32>) -> Self {
+        Self {
+            model,
+            prompt,
+            system: None,
+            context: Some(context),
+            stream: Some(true), // Default to streaming
+        }
     }
 }
 
-/// Response structure from the Ollama API (for streaming)
+/// A response from the Ollama API
 #[derive(Debug, Deserialize)]
 pub struct OllamaResponse {
-    /// The model name that generated the response
+    /// The model used for generation
     pub model: String,
     
     /// The time the response was created
@@ -72,19 +77,25 @@ pub struct OllamaResponse {
     /// Whether this is the final response
     pub done: bool,
     
-    /// Context for continuing the conversation
+    /// Optional context for continuing the conversation
     #[serde(skip_serializing_if = "Option::is_none")]
     pub context: Option<Vec<i32>>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
     
-    /// Total duration of the request
-    pub total_duration: Option<u64>,
-    
-    /// Duration of loading the model
-    pub load_duration: Option<u64>,
-    
-    /// Number of evaluations
-    pub eval_count: Option<u32>,
-    
-    /// Duration of evaluations
-    pub eval_duration: Option<u64>,
+    #[test]
+    fn test_ollama_request_with_system_message() {
+        let request = OllamaRequest::with_system(
+            "llama3".to_string(),
+            "Hello, world!".to_string(),
+            "You are a helpful assistant.".to_string()
+        );
+        
+        assert_eq!(request.model, "llama3");
+        assert_eq!(request.prompt, "Hello, world!");
+        assert_eq!(request.system, Some("You are a helpful assistant.".to_string()));
+    }
 }

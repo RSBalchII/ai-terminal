@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use terminal_emulator::{CommandHistory, HistoryEntry};
+    use std::fs;
 
     #[test]
     fn test_history_entry_creation() {
@@ -100,5 +101,57 @@ mod tests {
         assert_eq!(history.entries().len(), 3);
         // The oldest command should be removed
         assert_eq!(history.get_command(2).unwrap().command, "cmd2");
+    }
+    
+    #[test]
+    fn test_clear_history() {
+        // Use a temporary file to avoid interference from existing history
+        let temp_dir = std::env::temp_dir();
+        let history_file = temp_dir.join("ai_terminal_test_clear_history.txt");
+        
+        // Make sure the file doesn't exist
+        let _ = std::fs::remove_file(&history_file);
+        
+        let mut history = CommandHistory::with_file(100, history_file.clone()).unwrap();
+        history.add_command("cmd1".to_string()).unwrap();
+        history.add_command("cmd2".to_string()).unwrap();
+        
+        assert_eq!(history.entries().len(), 2);
+        
+        // Clear the history
+        let result = history.clear();
+        assert!(result.is_ok());
+        assert_eq!(history.entries().len(), 0);
+        
+        // Clean up
+        let _ = std::fs::remove_file(&history_file);
+    }
+    
+    #[test]
+    fn test_history_persistence() {
+        // Use a temporary file to avoid interference from existing history
+        let temp_dir = std::env::temp_dir();
+        let history_file = temp_dir.join("ai_terminal_test_persistence.txt");
+        
+        // Make sure the file doesn't exist
+        let _ = std::fs::remove_file(&history_file);
+        
+        // Create first history instance and add commands
+        {
+            let mut history = CommandHistory::with_file(100, history_file.clone()).unwrap();
+            history.add_command("cmd1".to_string()).unwrap();
+            history.add_command("cmd2".to_string()).unwrap();
+        }
+        
+        // Create second history instance to test loading from file
+        {
+            let history = CommandHistory::with_file(100, history_file.clone()).unwrap();
+            assert_eq!(history.entries().len(), 2);
+            assert_eq!(history.get_command(0).unwrap().command, "cmd2");
+            assert_eq!(history.get_command(1).unwrap().command, "cmd1");
+        }
+        
+        // Clean up
+        let _ = std::fs::remove_file(&history_file);
     }
 }

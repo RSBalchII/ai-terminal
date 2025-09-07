@@ -1,1 +1,0 @@
-/home/rsbiiw/projects/ai-terminal/target/debug/libollama_client.rlib: /home/rsbiiw/projects/ai-terminal/ollama-client/src/api.rs /home/rsbiiw/projects/ai-terminal/ollama-client/src/error.rs /home/rsbiiw/projects/ai-terminal/ollama-client/src/history.rs /home/rsbiiw/projects/ai-terminal/ollama-client/src/lib.rs /home/rsbiiw/projects/ai-terminal/ollama-client/src/models.rs

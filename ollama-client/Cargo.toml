@@ -22,6 +22,16 @@ futures-util = { workspace = true }
 # Tracing
 tracing = { workspace = true }
 
+# JSON-RPC for MCP
+jsonrpc-core = "18.0"
+jsonrpc-derive = "18.0"
+jsonrpc-server-utils = "18.0"
+jsonrpc-core-client = "18.0"
+
 # For tests
 wiremock = "0.5"
 async-stream = "0.3"
+
+[[bin]]
+name = "ollama-mcp-server"
+path = "src/bin/mcp_server.rs"

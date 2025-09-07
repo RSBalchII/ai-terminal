@@ -1,48 +1,151 @@
-# Implementation Plan: Coda A-001 (The Architect)
-- **Version:** 1.0
-- **Status:** Draft
-- **Spec Link:** `specs/Coda-A-001/spec.md`
-- **Date:** 2025-09-06
+# AI-Terminal Implementation Plan
 
 ## 1. Project Goal
-To develop and deploy a specialized generative agent, Coda A-001, capable of authoring high-quality, effective, and aligned POML constitutions for other AI agents within the ECE.
+To develop and deploy a revolutionary local-first terminal interface inspired by Zellij and Warp Terminal, functioning as an "Externalized Executive Function" for human users, integrating traditional command-line functionality with locally-hosted AI-driven assistance through Ollama.
 
 ## 2. Development Phases
-This project will be executed in four distinct phases, moving from foundational setup to advanced refinement and integration.
 
-### Phase 1: Foundational Persona Implementation
-*Goal: Establish the basic operational capability of the A-001 agent.*
+### Phase 1: Core Terminal Infrastructure
+*Goal: Establish the fundamental terminal emulator capabilities*
 
-- **P1.1: Constitution Finalization:** Formalize the draft `Coda-A-001.poml` file. This document will serve as the agent's own identity and behavioral guide.
-- **P1.2: Core Prompt Engineering:** Develop the main system prompt that instructs the LLM on its role as The Architect. This prompt will load the POML's core concepts (`<core_metaphor>`, `<values>`, `<directive>`) into the agent's working context.
-- **P1.3: Basic I/O Loop:** Implement a simple conversational interface to interact with the agent, allowing the Prime Architect to send requests and receive generated outputs.
+- **P1.1: PTY Execution Engine**
+    - Implement cross-platform PTY execution using `portable_pty`
+    - Create `PtyExecutor` for command execution and I/O handling
+    - Develop `CommandBlock` for representing command executions with state management
+    - Implement proper ANSI escape code handling
 
-### Phase 2: Core Protocol Development
-*Goal: Implement the agent's primary functional capabilities as defined in the specification.*
+- **P1.2: Command History System**
+    - Create `CommandHistory` for managing executed commands
+    - Implement persistent storage of command history
+    - Add search and navigation capabilities
+    - Support history deduplication and size limits
 
-- **P2.1: Develop `Constitutional_Analysis` Protocol (FR-1, FR-2):**
-    - Engineer a chain-of-thought prompt that guides the agent to analyze an initial request and generate relevant, Socratic clarifying questions.
-- **P2.2: Develop POML Generation Engine (FR-3):**
-    - Create the primary generative prompt that takes a set of clarified requirements and outputs a complete, well-formed POML file.
-- **P2.3: Develop `Integrity_Validation` Protocol (FR-4):**
-    - Implement a two-step "Generate & Review" process.
-    - Step 1: The generation engine (P2.2) creates a draft POML.
-    - Step 2: A separate "Critic" prompt reviews the draft for logical inconsistencies, conflicting protocols, or vague language before presenting the final output.
+- **P1.3: Basic Terminal UI**
+    - Set up `ratatui`-based terminal interface
+    - Implement basic input/output rendering
+    - Create terminal session management
+    - Add simple keyboard controls (enter, backspace, navigation)
 
-### Phase 3: Knowledge Base & Refinement Loop
-*Goal: Enable the agent to learn and improve over time.*
+### Phase 2: Modern UI Features (Warp/Zellij-inspired)
+*Goal: Implement advanced user interface components with panes and tabs*
 
-- **P3.1: Implement Knowledge Base (FR-5):**
-    - Create a structured `knowledge_base.md` file containing examples of effective linguistic patterns, metaphors, and protocol designs.
-    - Modify the core prompt to instruct the agent to consult this knowledge base when drafting new POMLs.
-- **P3.2: Implement `Iterative_Refinement` Protocol (FR-6):**
-    - Develop a prompt that allows the agent to receive natural language feedback on a generated POML (e.g., "Make the values more focused on creativity") and generate a revised version.
+- **P2.1: Pane Management**
+    - Implement horizontal and vertical pane splitting
+    - Add pane resizing capabilities
+    - Create pane navigation system
+    - Support pane closing and reorganization
 
-### Phase 4: Testing & Integration
-*Goal: Verify the agent's effectiveness and integrate it into our standard workflow.*
+- **P2.2: Tab Management**
+    - Develop tab creation and naming system
+    - Implement tab switching and navigation
+    - Add tab closing functionality
+    - Support session organization with tabs
 
-- **P4.1: Develop Evaluation Suite:** Create a set of test cases, each with a sample persona request and a list of desired outcomes, to benchmark the agent's performance against its success criteria.
-- **P4.2: Workflow Integration:** Define the command and process for invoking Coda A-001 from within the primary `AI-Terminal` or development environment.
+- **P2.3: Command Blocks**
+    - Enhance `CommandBlock` with visual status indicators
+    - Implement command block grouping and organization
+    - Add inline command editing capabilities
+    - Create rich output rendering for structured data
+
+### Phase 3: Enhanced UI/UX Features
+*Goal: Implement advanced user interface components*
+
+- **P3.1: Layout Management**
+    - Develop flexible layout system for terminal components
+    - Implement responsive resizing
+    - Create multi-pane support for complex UI arrangements
+
+- **P3.2: Theming System**
+    - Build theme management infrastructure
+    - Create default themes (light, dark, high contrast)
+    - Implement theme customization through TOML files
+    - Add runtime theme switching
+
+- **P3.3: Advanced Widgets**
+    - Implement command palette with fuzzy search
+    - Create confirmation modal dialogs
+    - Add status bar and header components
+    - Develop scrollable content areas
+
+### Phase 4: Ollama Integration (Local-First AI)
+*Goal: Integrate local AI capabilities through Ollama*
+
+- **P4.1: Ollama Client Core**
+    - Implement `OllamaClient` for API communication
+    - Create data models for requests and responses
+    - Add streaming response handling
+    - Implement conversation history management
+
+- **P4.2: Local Model Management**
+    - Develop model listing functionality
+    - Implement model pulling capabilities
+    - Add model removal functionality
+    - Create model information display
+
+- **P4.3: AI Command Processing**
+    - Integrate AI commands with terminal input
+    - Implement streaming AI response display
+    - Add context management for conversations
+    - Create AI-powered command suggestions
+
+### Phase 5: Session Management and Advanced Features
+*Goal: Add session persistence and sophisticated features*
+
+- **P5.1: Session Management**
+    - Implement session saving and restoration
+    - Add session naming and organization
+    - Create session export/import functionality
+    - Support automatic session recovery
+
+- **P5.2: Configuration System**
+    - Implement TOML-based configuration files
+    - Add user preference management
+    - Create configuration loading and validation
+    - Support environment-specific configurations
+
+- **P5.3: Performance Optimization**
+    - Optimize command output rendering
+    - Improve memory usage for large outputs
+    - Add asynchronous operation support
+    - Implement efficient data structures
+
+### Phase 6: Testing and Refinement
+*Goal: Ensure quality and stability*
+
+- **P6.1: Comprehensive Testing**
+    - Implement unit tests for all core components
+    - Add integration tests for major workflows
+    - Create performance benchmarks
+    - Conduct cross-platform testing
+
+- **P6.2: Documentation**
+    - Write user documentation and guides
+    - Create developer documentation
+    - Add inline code documentation
+    - Provide example configurations
+
+- **P6.3: Final Polish**
+    - Refine UI/UX based on feedback
+    - Optimize performance
+    - Fix any remaining bugs
+    - Prepare release packages
 
 ## 3. Timeline
-A detailed task breakdown with time estimates will be provided in the `tasks.md` file, pending approval of this plan.
+The project will be executed in 6 phases over approximately 16 weeks:
+
+- Phase 1: Weeks 1-2
+- Phase 2: Weeks 3-5
+- Phase 3: Weeks 6-7
+- Phase 4: Weeks 8-10
+- Phase 5: Weeks 11-13
+- Phase 6: Weeks 14-16
+
+## 4. Success Criteria
+- All core terminal functionality works correctly across platforms
+- Modern UI features (panes, tabs, command blocks) work seamlessly
+- Local AI integration through Ollama provides meaningful assistance
+- UI is responsive and provides an enhanced terminal experience
+- Application functions completely offline with local AI models
+- Application is stable and handles errors gracefully
+- Comprehensive test coverage is achieved
+- Documentation is complete and accurate

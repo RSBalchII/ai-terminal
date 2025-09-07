@@ -5,7 +5,6 @@
 
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
-    Frame,
 };
 
 /// Manages the overall layout of the terminal UI
@@ -17,6 +16,11 @@ impl LayoutManager {
     /// Create a new layout manager with the given terminal size
     pub fn new(terminal_size: Rect) -> Self {
         Self { terminal_size }
+    }
+    
+    /// Get the current terminal size
+    pub fn terminal_size(&self) -> Rect {
+        self.terminal_size
     }
     
     /// Update the layout based on the current terminal size
@@ -103,7 +107,7 @@ mod tests {
         assert_eq!(layout[0].height, 1);
         
         // Input should be 3 lines tall
-        assert_eq!(layout[1].height, 3);
+        assert_eq!(layout[2].height, 3);
         
         // Status should be 1 line tall
         assert_eq!(layout[3].height, 1);

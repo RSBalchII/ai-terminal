@@ -5,7 +5,7 @@
 
 use ratatui::{
     layout::Rect,
-    style::{Style, Color, Modifier},
+    style::{Style, Color},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Clear},
     Frame,
@@ -56,6 +56,9 @@ impl CommandPalette {
             Command::new("scroll_up", "Scroll Up", "Scroll the chat up by 5 lines", "Navigation", "⬆️"),
             Command::new("scroll_down", "Scroll Down", "Scroll the chat down by 5 lines", "Navigation", "⬇️"),
             Command::new("toggle_theme", "Toggle Theme", "Switch between light and dark themes", "View", "🎨"),
+            Command::new("test_confirmation", "Test Confirmation", "Show a test confirmation modal", "Test", "✅"),
+            Command::new("save_theme", "Save Theme", "Save the current theme to a file", "View", "💾"),
+            Command::new("list_themes", "List Themes", "Show all available themes", "View", "📋"),
         ];
         
         let matcher = SkimMatcherV2::default();
@@ -67,6 +70,26 @@ impl CommandPalette {
             selected_index: 0,
             matcher,
         }
+    }
+    
+    /// Get the number of commands
+    pub fn command_count(&self) -> usize {
+        self.commands.len()
+    }
+    
+    /// Get the number of filtered commands
+    pub fn filtered_command_count(&self) -> usize {
+        self.filtered_commands.len()
+    }
+    
+    /// Get the current input
+    pub fn input(&self) -> &str {
+        &self.input
+    }
+    
+    /// Get the selected index
+    pub fn selected_index(&self) -> usize {
+        self.selected_index
     }
     
     /// Update the filter based on user input

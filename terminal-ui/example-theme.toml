@@ -1,0 +1,14 @@
+# AI Terminal Theme Configuration
+# This is a sample theme file that you can modify to create your own themes.
+
+name = "ocean"
+primary = "blue"
+secondary = "cyan"
+background = "#001f3f"
+text = "white"
+accent = "cyan"
+error = "red"
+success = "green"
+warning = "yellow"
+command = "cyan"
+ai_response = "green"
