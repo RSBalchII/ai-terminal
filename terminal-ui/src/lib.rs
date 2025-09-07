@@ -29,10 +29,10 @@ use ollama_client::{OllamaClient, OllamaRequest};
 use futures_util::StreamExt;
 
 // New imports for our UI/UX improvements
-use layout::LayoutManager;
-use layout::PaneManager;
-use layout::SplitOrientation;
-use layout::TabManager;
+use layout::manager::LayoutManager;
+use layout::pane::PaneManager;
+use layout::pane::SplitOrientation;
+use layout::tab::TabManager;
 use widgets::{CommandPalette, Command, ConfirmationModal, CommandBlock as UICommandBlock};
 use theme::ThemeManager;
 // Import our new markdown renderer
