@@ -1,8 +1,7 @@
 # AI-Terminal Project Specification
 
 ## 1. Overview
-The AI-Terminal is a revolutionary local-first terminal interface inspired by Zellij and Warp Terminal, functioning as an "Externalized Executive Function" for human users. It serves as a "Personal Pauline" - a genuine partner in cognitive and creative processes - while incorporating modern terminal features like panes, tabs, and AI-powered assistance.
-
+The AI-Terminal is a revolutionary local-first terminal interface inspired by Zellij and Warp Terminal.
 This document outlines the technical specification for the AI-Terminal application, focusing on its structure as a Rust-based terminal interface with integrated local AI capabilities through Ollama.
 
 ## 2. Core Philosophy
